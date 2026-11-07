@@ -10,6 +10,7 @@ tasks:
     covers: [AC-002.1, AC-002.2, AC-002.3, AC-002.4, AC-002.5, AC-002.6, AC-002.7]
     parallel_safe: true
     depends_on: []
+    done: true
   - id: t2
     title: Add psycopg and the Database module (timeouts, schema bootstrap, ping, StorageUnavailableError)
     files: [pyproject.toml, uv.lock, src/taskboard6_api/db.py, tests/test_db.py, docs/env-vars.md]
