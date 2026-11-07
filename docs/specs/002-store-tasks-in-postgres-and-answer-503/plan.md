@@ -24,6 +24,7 @@ tasks:
     covers: [AC-002.1, AC-002.2, AC-002.3, AC-002.4, AC-002.5, AC-002.7]
     parallel_safe: true
     depends_on: [t1, t2]
+    done: true
   - id: t4
     title: Wire create_app, database readiness and the 503/500 handlers
     files: [src/taskboard6_api/main.py]
