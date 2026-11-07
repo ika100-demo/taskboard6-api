@@ -1,6 +1,7 @@
 """Unit tests for task models and the in-memory store."""
 
 from datetime import UTC, date
+from types import SimpleNamespace
 
 import pytest
 from pydantic import ValidationError
@@ -34,8 +35,10 @@ def test_timestamp_utc_and_serialization() -> None:
     assert set(dumped) == {"id", "title", "due_date", "created_at"}
 
 
-def test_get_task_store_is_singleton() -> None:
-    assert get_task_store() is get_task_store()
+def test_get_task_store_returns_app_state_store() -> None:
+    store = TaskStore()
+    request = SimpleNamespace(app=SimpleNamespace(state=SimpleNamespace(task_store=store)))
+    assert get_task_store(request) is store  # type: ignore[arg-type]
 
 
 def test_title_stripped() -> None:

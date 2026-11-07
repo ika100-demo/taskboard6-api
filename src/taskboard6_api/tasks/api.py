@@ -6,12 +6,12 @@ import structlog
 from fastapi import APIRouter, Depends
 
 from .models import Task, TaskCreate
-from .store import TaskStore, get_task_store
+from .store import TaskStorage, get_task_store
 
 router = APIRouter(tags=["tasks"])
 logger = structlog.get_logger(__name__)
 
-StoreDep = Annotated[TaskStore, Depends(get_task_store)]
+StoreDep = Annotated[TaskStorage, Depends(get_task_store)]
 
 
 @router.post("/tasks", status_code=201, response_model=Task)
