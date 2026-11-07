@@ -1,7 +1,7 @@
 ---
 spec_id: 002-store-tasks-in-postgres-and-answer-503
 title: Store tasks in Postgres and answer 503 and not-ready while the database is unreachable
-status: approved
+status: building
 priority: P1
 shape: service-python
 parent: ika100-demo/taskboard6-gitops:001-persistent-tasks-and-task-ui
@@ -129,3 +129,4 @@ Tests need a real Postgres (devbox service or testcontainers); "restart" = a new
 
 - 2026-11-07 created from the system plan, with its criteria (spec 147)
 - 2026-11-07 approved
+- 2026-11-07 building
