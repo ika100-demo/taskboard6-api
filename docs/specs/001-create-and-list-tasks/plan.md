@@ -10,6 +10,7 @@ tasks:
     covers: [AC-001.1, AC-001.2, AC-001.3, AC-001.4, AC-001.5, AC-001.7]
     parallel_safe: true
     depends_on: []
+    done: true
   - id: t2
     title: Add tasks router and mount it in the app
     files: [src/taskboard6_api/tasks/__init__.py, src/taskboard6_api/tasks/api.py, src/taskboard6_api/main.py]
