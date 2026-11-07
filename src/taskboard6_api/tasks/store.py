@@ -3,8 +3,19 @@
 import threading
 import uuid
 from datetime import UTC, date, datetime
+from typing import Protocol
+
+from fastapi import Request
 
 from taskboard6_api.tasks.models import Task
+
+
+class TaskStorage(Protocol):
+    """What the routes need from a task store."""
+
+    def add(self, title: str, due_date: date | None) -> Task: ...
+
+    def list(self) -> "list[Task]": ...
 
 
 class TaskStore:
@@ -34,8 +45,6 @@ class TaskStore:
             self._tasks.clear()
 
 
-_store = TaskStore()
-
-
-def get_task_store() -> TaskStore:
-    return _store
+def get_task_store(request: Request) -> TaskStorage:
+    store: TaskStorage = request.app.state.task_store
+    return store
