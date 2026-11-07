@@ -9,7 +9,7 @@ from fastapi.responses import Response
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from pydantic import BaseModel
 
-from . import __version__
+from . import __version__, tasks
 from .logging_config import configure_logging
 from .metrics import MetricsMiddleware
 from .tracing import configure_tracing, tracing_enabled
@@ -20,6 +20,7 @@ if tracing_enabled():
 
 app = FastAPI(title="taskboard6-api", version=__version__)
 app.add_middleware(MetricsMiddleware)
+app.include_router(tasks.router)
 
 
 class HealthResponse(BaseModel):
