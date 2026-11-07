@@ -17,6 +17,7 @@ tasks:
     covers: [AC-002.4, AC-002.5, AC-002.6, AC-002.7]
     parallel_safe: true
     depends_on: []
+    done: true
   - id: t3
     title: Add PostgresTaskStore and the TaskStorage seam
     files: [src/taskboard6_api/tasks/pg_store.py, src/taskboard6_api/tasks/store.py, src/taskboard6_api/tasks/api.py, tests/test_tasks_store.py, tests/test_pg_store.py]
