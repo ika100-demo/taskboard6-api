@@ -10,10 +10,14 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
-from taskboard6_api.main import create_app
-
 CREATED_AT_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z$")
 UNAVAILABLE = {"detail": "Task storage is unavailable"}
+
+
+def _app(url: str) -> Any:
+    from taskboard6_api.main import create_app
+
+    return create_app(url)
 
 
 def _assert_422_for(response: Any, field: str) -> None:
@@ -22,12 +26,12 @@ def _assert_422_for(response: Any, field: str) -> None:
 
 
 def test_tasks_survive_restart(pg_url: str, clean_db: None) -> None:  # AC-002.1
-    with TestClient(create_app(pg_url)) as first:
+    with TestClient(_app(pg_url)) as first:
         created = [
             first.post("/tasks", json={"title": t, "due_date": d}).json()
             for t, d in [("A", None), ("B", "2026-01-01"), ("C", None)]
         ]
-    with TestClient(create_app(pg_url)) as second:
+    with TestClient(_app(pg_url)) as second:
         response = second.get("/tasks")
     assert response.status_code == 200
     assert response.json() == created
@@ -37,18 +41,18 @@ def test_tasks_survive_restart(pg_url: str, clean_db: None) -> None:  # AC-002.1
 
 def test_tasks_survive_server_restart(pg_factory: Any) -> None:  # AC-002.1
     server = pg_factory.start()
-    with TestClient(create_app(server.url)) as c:
+    with TestClient(_app(server.url)) as c:
         created = [c.post("/tasks", json={"title": t}).json() for t in ("A", "B", "C")]
     server.stop()
     server.start()
-    with TestClient(create_app(server.url)) as c:
+    with TestClient(_app(server.url)) as c:
         response = c.get("/tasks")
     assert response.status_code == 200
     assert response.json() == created
 
 
 def test_second_process_sees_same_tasks(pg_url: str, clean_db: None) -> None:  # AC-002.2
-    with TestClient(create_app(pg_url)) as one, TestClient(create_app(pg_url)) as two:
+    with TestClient(_app(pg_url)) as one, TestClient(_app(pg_url)) as two:
         created = [one.post("/tasks", json={"title": t}).json() for t in ("A", "B", "C")]
         assert two.get("/tasks").json() == created
         extra = two.post("/tasks", json={"title": "D"}).json()
@@ -57,7 +61,7 @@ def test_second_process_sees_same_tasks(pg_url: str, clean_db: None) -> None:  #
 
 @pytest.fixture()
 def pg_client(pg_url: str, clean_db: None) -> TestClient:
-    return TestClient(create_app(pg_url))
+    return TestClient(_app(pg_url))
 
 
 def test_pg_create_minimal_task(pg_client: TestClient) -> None:  # AC-002.3
@@ -108,7 +112,7 @@ def test_pg_list_empty(pg_client: TestClient) -> None:  # AC-002.3
 
 def test_post_503_when_db_down_and_nothing_stored(pg_factory: Any) -> None:  # AC-002.4
     server = pg_factory.start()
-    app = create_app(server.url)
+    app = _app(server.url)
     with TestClient(app) as c:
         assert c.get("/tasks").status_code == 200
         server.stop()
@@ -124,7 +128,7 @@ def test_post_503_when_db_down_and_nothing_stored(pg_factory: Any) -> None:  # A
 
 
 def test_post_503_unreachable_url(unreachable_url: str) -> None:  # AC-002.4
-    with TestClient(create_app(unreachable_url)) as c:
+    with TestClient(_app(unreachable_url)) as c:
         started = time.monotonic()
         response = c.post("/tasks", json={"title": "x"})
     assert time.monotonic() - started < 5
@@ -133,7 +137,7 @@ def test_post_503_unreachable_url(unreachable_url: str) -> None:  # AC-002.4
 
 
 def test_get_503_when_db_down(unreachable_url: str) -> None:  # AC-002.5
-    with TestClient(create_app(unreachable_url)) as c:
+    with TestClient(_app(unreachable_url)) as c:
         started = time.monotonic()
         response = c.get("/tasks")
     assert time.monotonic() - started < 5
@@ -142,7 +146,7 @@ def test_get_503_when_db_down(unreachable_url: str) -> None:  # AC-002.5
 
 
 def test_ready_503_health_200_when_db_down(unreachable_url: str) -> None:  # AC-002.6
-    with TestClient(create_app(unreachable_url)) as c:
+    with TestClient(_app(unreachable_url)) as c:
         ready = c.get("/ready")
         health = c.get("/health")
     assert ready.status_code == 503
@@ -152,7 +156,7 @@ def test_ready_503_health_200_when_db_down(unreachable_url: str) -> None:  # AC-
 
 def test_recovers_without_restart(pg_factory: Any) -> None:  # AC-002.7
     port = pg_factory.free_port()
-    with TestClient(create_app(f"postgresql://postgres@127.0.0.1:{port}/postgres")) as c:
+    with TestClient(_app(f"postgresql://postgres@127.0.0.1:{port}/postgres")) as c:
         assert c.get("/ready").status_code == 503
         assert c.get("/tasks").status_code == 503
         pg_factory.start(port)
